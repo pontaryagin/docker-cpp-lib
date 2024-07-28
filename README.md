@@ -8,3 +8,9 @@ docker build \
      --build-arg GCC_VERSION=13 \
 
 ```
+
+# lint
+
+```
+docker run --rm -i docker.io/hadolint/hadolint < boost.Dockerfile
+```
