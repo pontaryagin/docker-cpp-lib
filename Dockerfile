@@ -51,7 +51,7 @@ RUN . /profile && \
                 --prefix=/output 
 
 RUN . /profile && \
-    make
+    make install -j ${NUM_JOBS}
 
 FROM scratch as final
 COPY --from=boost /output /boost
