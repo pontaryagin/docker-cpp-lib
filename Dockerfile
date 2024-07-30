@@ -34,7 +34,8 @@ RUN . /profile && \
     ./bootstrap.sh --prefix=/output
 
 RUN . /profile && \
-    ./b2 install -j ${NUM_JOBS}
+    ./b2 install -j ${NUM_JOBS} && \
+    rm -rf ./*
 
 FROM base as quantlib
 COPY --from=boost /output /boost_output
@@ -51,7 +52,8 @@ RUN . /profile && \
                 --prefix=/output 
 
 RUN . /profile && \
-    make install -j ${NUM_JOBS}
+    make install -j ${NUM_JOBS} && \
+    rm -rf ./*
 
 FROM scratch as final
 COPY --from=boost /output /boost
