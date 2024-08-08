@@ -15,7 +15,8 @@ ENV BOOST_VERSION=${BOOST_VERSION} \
     GTEST_VERSION=${GTEST_VERSION}
 
 RUN cd /usr/bin && \
-    ln -s python3.9 python
+    ln -s python3.9 python && \
+    dnf -y install python3-pip
 
 RUN dnf -y install gcc-toolset-${GCC_VERSION} cmake wget tar bzip2 git && \
     dnf clean all
