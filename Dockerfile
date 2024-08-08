@@ -1,18 +1,20 @@
-FROM centos:stream9 as base
+FROM registry.access.redhat.com/ubi9/ubi as base
 
 ARG BOOST_VERSION=1.80.0 \
     GCC_VERSION=13 \
     NUM_JOBS=4 \
     QUANTLIB_VERSION=1.35 \
-    EIGEN_VERSION=3.4.0
+    EIGEN_VERSION=3.4.0 \
+    GTEST_VERSION=1.15.2
 
 ENV BOOST_VERSION=${BOOST_VERSION} \
     GCC_VERSION=${GCC_VERSION} \
     NUM_JOBS=${NUM_JOBS} \
     QUANTLIB_VERSION=${QUANTLIB_VERSION} \
-    EIGEN_VERSION=${EIGEN_VERSION}
+    EIGEN_VERSION=${EIGEN_VERSION} \
+    GTEST_VERSION=${GTEST_VERSION}
 
-RUN dnf -y install gcc-toolset-${GCC_VERSION} cmake wget tar bzip2 && \
+RUN dnf -y install gcc-toolset-${GCC_VERSION} cmake wget tar bzip2 git && \
     dnf clean all
 RUN echo '. /opt/rh/gcc-toolset-13/enable' >> /profile
 
@@ -66,8 +68,7 @@ RUN wget https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EI
 RUN tar -xf eigen-${EIGEN_VERSION}.tar.gz && \
     mv eigen-${EIGEN_VERSION} eigen
 
-RUN set -xe && \
-    . /profile && \
+RUN . /profile && \
     mkdir build && \
     cd build && \
     cmake /work/eigen -DCMAKE_INSTALL_PREFIX=/output && \
@@ -77,7 +78,23 @@ RUN set -xe && \
 FROM scratch as eigen
 COPY --from=eigen_build /output /
 
+FROM base as gtest_build
+WORKDIR /work
+RUN git clone https://github.com/google/googletest.git -b v${GTEST_VERSION}
+
+RUN . /profile && \
+    cd googletest && \
+    mkdir build && \
+    cd build && \
+    cmake /work/googletest -DCMAKE_INSTALL_PREFIX=/output && \
+    make install -j ${NUM_JOBS} && \
+    rm -rf ./*
+
+FROM scratch as gtest
+COPY --from=gtest_build /output /
+
 FROM scratch as final
 COPY --from=boost / /
 COPY --from=quantlib / /
 COPY --from=eigen / /
+COPY --from=gtest / /
