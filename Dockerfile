@@ -5,21 +5,30 @@ ARG BOOST_VERSION=1.80.0 \
     NUM_JOBS=4 \
     QUANTLIB_VERSION=1.35 \
     EIGEN_VERSION=3.4.0 \
-    GTEST_VERSION=1.15.2
+    GTEST_VERSION=1.15.2 \
+    POETRY_VERSION=1.8.3
 
 ENV BOOST_VERSION=${BOOST_VERSION} \
     GCC_VERSION=${GCC_VERSION} \
     NUM_JOBS=${NUM_JOBS} \
     QUANTLIB_VERSION=${QUANTLIB_VERSION} \
     EIGEN_VERSION=${EIGEN_VERSION} \
-    GTEST_VERSION=${GTEST_VERSION}
+    GTEST_VERSION=${GTEST_VERSION} \
+    POETRY_VERSION=${POETRY_VERSION}
 
+# install python and pip
 RUN cd /usr/bin && \
     ln -s python3.9 python && \
     dnf -y install python3-pip
 
+# poetry
+RUN curl -sSL https://install.python-poetry.org | python - && \
+    ~/.local/bin/poetry completions bash >> ~/.bash_completion && \
+    dnf -y install bash-completion
+
 RUN dnf -y install gcc-toolset-${GCC_VERSION} cmake wget tar bzip2 git && \
     dnf clean all
+
 RUN echo '. /opt/rh/gcc-toolset-13/enable' >> /profile
 
 FROM base as boost_build
