@@ -29,25 +29,25 @@ RUN curl -sSL https://install.python-poetry.org | python - && \
 RUN dnf -y install gcc-toolset-${GCC_VERSION} cmake wget tar bzip2 git && \
     dnf clean all
 
-RUN echo '. /opt/rh/gcc-toolset-13/enable' >> /profile
+RUN echo '. /opt/rh/gcc-toolset-13/enable' >> ~/.bash_profile
 
 FROM base as boost_build
 WORKDIR /work
-RUN echo 'export BOOST_VERSION_MOD=$(echo $BOOST_VERSION | tr . _)' >> /profile
+RUN echo 'export BOOST_VERSION_MOD=$(echo $BOOST_VERSION | tr . _)' >> ~/.bash_profile
 
-RUN . /profile && \
+RUN . ~/.bash_profile && \
     wget https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_MOD}.tar.bz2
 
-RUN . /profile && \
+RUN . ~/.bash_profile && \
     tar --bzip2 -xf boost_${BOOST_VERSION_MOD}.tar.bz2 && \
     mv boost_${BOOST_VERSION_MOD} boost
 
 WORKDIR /work/boost
 
-RUN . /profile && \
+RUN . ~/.bash_profile && \
     ./bootstrap.sh --prefix=/output
 
-RUN . /profile && \
+RUN . ~/.bash_profile && \
     ./b2 install -j ${NUM_JOBS} && \
     rm -rf ./*
 
@@ -64,11 +64,11 @@ RUN tar -xf QuantLib-${QUANTLIB_VERSION}.tar.gz && \
 
 WORKDIR /work/QuantLib
 
-RUN . /profile && \
+RUN . ~/.bash_profile && \
     ./configure --with-boost-include=/boost_output/include \
                 --prefix=/output 
 
-RUN . /profile && \
+RUN . ~/.bash_profile && \
     make install -j ${NUM_JOBS} && \
     rm -rf ./*
 
@@ -81,7 +81,7 @@ RUN wget https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EI
 RUN tar -xf eigen-${EIGEN_VERSION}.tar.gz && \
     mv eigen-${EIGEN_VERSION} eigen
 
-RUN . /profile && \
+RUN . ~/.bash_profile && \
     mkdir build && \
     cd build && \
     cmake /work/eigen -DCMAKE_INSTALL_PREFIX=/output && \
@@ -95,7 +95,7 @@ FROM base as gtest_build
 WORKDIR /work
 RUN git clone https://github.com/google/googletest.git -b v${GTEST_VERSION}
 
-RUN . /profile && \
+RUN . ~/.bash_profile && \
     cd googletest && \
     mkdir build && \
     cd build && \
