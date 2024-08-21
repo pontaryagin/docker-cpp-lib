@@ -1,20 +1,9 @@
 FROM registry.access.redhat.com/ubi9/ubi as base
 
-ARG BOOST_VERSION=1.80.0 \
-    GCC_VERSION=13 \
-    NUM_JOBS=4 \
-    QUANTLIB_VERSION=1.35 \
-    EIGEN_VERSION=3.4.0 \
-    GTEST_VERSION=1.15.2 \
-    POETRY_VERSION=1.8.3
+ARG GCC_VERSION=13 \
+    NUM_JOBS=4
 
-ENV BOOST_VERSION=${BOOST_VERSION} \
-    GCC_VERSION=${GCC_VERSION} \
-    NUM_JOBS=${NUM_JOBS} \
-    QUANTLIB_VERSION=${QUANTLIB_VERSION} \
-    EIGEN_VERSION=${EIGEN_VERSION} \
-    GTEST_VERSION=${GTEST_VERSION} \
-    POETRY_VERSION=${POETRY_VERSION}
+ENV NUM_JOBS=${NUM_JOBS}
 
 # install python and pip
 RUN cd /usr/bin && \
@@ -32,6 +21,8 @@ RUN dnf -y install gcc-toolset-${GCC_VERSION} cmake wget tar bzip2 git && \
 RUN echo '. /opt/rh/gcc-toolset-13/enable' >> ~/.bash_profile
 
 FROM base as boost_build
+ARG BOOST_VERSION=1.80.0
+ENV BOOST_VERSION=${BOOST_VERSION}
 WORKDIR /work
 RUN echo 'export BOOST_VERSION_MOD=$(echo $BOOST_VERSION | tr . _)' >> ~/.bash_profile
 
@@ -55,6 +46,7 @@ FROM scratch as boost
 COPY --from=boost_build /output /
 
 FROM base as quantlib_build
+ARG QUANTLIB_VERSION=1.35
 COPY --from=boost /output /boost_output
 WORKDIR /work
 RUN wget https://github.com/lballabio/QuantLib/releases/download/v${QUANTLIB_VERSION}/QuantLib-${QUANTLIB_VERSION}.tar.gz
@@ -76,6 +68,7 @@ FROM scratch as quantlib
 COPY --from=quantlib_build /output /
 
 FROM base as eigen_build
+ARG EIGEN_VERSION=3.4.0
 WORKDIR /work
 RUN wget https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
 RUN tar -xf eigen-${EIGEN_VERSION}.tar.gz && \
@@ -92,6 +85,7 @@ FROM scratch as eigen
 COPY --from=eigen_build /output /
 
 FROM base as gtest_build
+ARG GTEST_VERSION=1.15.2
 WORKDIR /work
 RUN git clone https://github.com/google/googletest.git -b v${GTEST_VERSION}
 
